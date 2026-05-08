@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -22,12 +22,22 @@ const PRICING = {
 export default function AuditForm() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [teamSize, setTeamSize] = useState("1-2")
-  const [useCase, setUseCase] = useState("Coding")
-  const [tools, setTools] = useState<ToolInput[]>([])
+  const [formData, setFormData] = useState<{
+    teamSize: string;
+    useCase: string;
+    tools: ToolInput[];
+  }>({
+    teamSize: "1-2",
+    useCase: "Coding",
+    tools: []
+  })
 
-  const [availableTools, setAvailableTools] = useState(Object.keys(PRICING))
+  // State for the tool selection UI
+  const [availableTools] = useState(Object.keys(PRICING))
   const [selectedTool, setSelectedTool] = useState(Object.keys(PRICING)[0])
+
+  // Use a ref to track if we've loaded from localStorage to avoid saving defaults over saved data
+  const hasLoaded = useRef(false)
 
   // Load from localstorage on mount
   useEffect(() => {
@@ -35,49 +45,68 @@ export default function AuditForm() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (parsed.teamSize) setTeamSize(parsed.teamSize)
-        if (parsed.useCase) setUseCase(parsed.useCase)
-        if (parsed.tools) setTools(parsed.tools)
-      } catch (e) {}
+        startTransition(() => {
+          setFormData({
+            teamSize: parsed.teamSize || "1-2",
+            useCase: parsed.useCase || "Coding",
+            tools: parsed.tools || []
+          })
+          hasLoaded.current = true
+        })
+      } catch (e) {
+        console.error("Failed to parse saved draft", e)
+        hasLoaded.current = true
+      }
+    } else {
+      hasLoaded.current = true
     }
   }, [])
 
-  // Save to localstorage on change
+  // Save to localstorage on change, but only after initial load
   useEffect(() => {
-    localStorage.setItem("spendwise-draft", JSON.stringify({ teamSize, useCase, tools }))
-  }, [teamSize, useCase, tools])
+    if (hasLoaded.current) {
+      localStorage.setItem("spendwise-draft", JSON.stringify(formData))
+    }
+  }, [formData])
+
+  const getPlanPrice = (toolName: string, planName: string): number => {
+    const toolPricing = PRICING[toolName as keyof typeof PRICING] as Record<string, number>
+    return toolPricing?.[planName] ?? 0
+  }
 
   const addTool = () => {
     const plans = Object.keys(PRICING[selectedTool as keyof typeof PRICING])
     const defaultPlan = plans[0]
-    setTools([...tools, { tool: selectedTool, plan: defaultPlan, seats: 1, spend: PRICING[selectedTool as keyof typeof PRICING][defaultPlan as keyof typeof PRICING["GitHub Copilot"]] || 0 }])
+    setFormData(prev => ({
+      ...prev,
+      tools: [...prev.tools, { tool: selectedTool, plan: defaultPlan, seats: 1, spend: getPlanPrice(selectedTool, defaultPlan) }]
+    }))
   }
 
   const removeTool = (index: number) => {
-    setTools(tools.filter((_, i) => i !== index))
+    setFormData(prev => ({
+      ...prev,
+      tools: prev.tools.filter((_, i) => i !== index)
+    }))
   }
 
-  const updateTool = (index: number, field: keyof ToolInput, value: any) => {
-    const newTools = [...tools]
-    newTools[index] = { ...newTools[index], [field]: value }
-    
-    // Auto calculate spend if seats or plan change
-    if (field === "plan" || field === "seats") {
-      const toolName = newTools[index].tool as keyof typeof PRICING
-      const planName = newTools[index].plan as keyof typeof PRICING["GitHub Copilot"]
-      const pricePerSeat = PRICING[toolName]?.[planName] || 0
+  const updateTool = <K extends keyof ToolInput>(index: number, field: K, value: ToolInput[K]) => {
+    setFormData(prev => {
+      const newTools = [...prev.tools]
+      newTools[index] = { ...newTools[index], [field]: value }
       
-      // Only auto-update spend if price is fixed (not 0/API) or if it's currently 0
-      if (pricePerSeat > 0) {
-        newTools[index].spend = pricePerSeat * newTools[index].seats
+      if (field === "plan" || field === "seats") {
+        const pricePerSeat = getPlanPrice(newTools[index].tool, newTools[index].plan)
+        if (pricePerSeat > 0) {
+          newTools[index].spend = pricePerSeat * newTools[index].seats
+        }
       }
-    }
-    
-    setTools(newTools)
+      return { ...prev, tools: newTools }
+    })
   }
 
   const runAudit = async () => {
-    const context: AuditContext = { teamSize, primaryUseCase: useCase, tools }
+    const context: AuditContext = { teamSize: formData.teamSize, primaryUseCase: formData.useCase, tools: formData.tools }
     
     // We will save to a temporary store, but in a real app this creates a DB record
     // We'll generate a random ID and store the payload in sessionStorage to pass to results page
@@ -103,7 +132,7 @@ export default function AuditForm() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label>Team Size</Label>
-                <Select value={teamSize} onChange={(e) => setTeamSize(e.target.value)}>
+                <Select value={formData.teamSize} onChange={(e) => setFormData(prev => ({ ...prev, teamSize: e.target.value }))}>
                   <option value="1-2">1–2</option>
                   <option value="3-10">3–10</option>
                   <option value="11-50">11–50</option>
@@ -117,8 +146,8 @@ export default function AuditForm() {
                   {["Coding", "Writing", "Data", "Research", "Mixed"].map(uc => (
                     <div 
                       key={uc}
-                      onClick={() => setUseCase(uc)}
-                      className={`p-4 rounded-lg border cursor-pointer text-center transition-colors ${useCase === uc ? "border-brand-primary bg-brand-primary/10 text-brand-accent" : "border-border hover:border-muted-foreground"}`}
+                      onClick={() => setFormData(prev => ({ ...prev, useCase: uc }))}
+                      className={`p-4 rounded-lg border cursor-pointer text-center transition-colors ${formData.useCase === uc ? "border-brand-primary bg-brand-primary/10 text-brand-accent" : "border-border hover:border-muted-foreground"}`}
                     >
                       {uc}
                     </div>
@@ -130,7 +159,7 @@ export default function AuditForm() {
 
           {step === 2 && (
             <div className="space-y-6">
-              {tools.map((t, i) => (
+              {formData.tools.map((t, i) => (
                 <div key={i} className="flex flex-col md:flex-row gap-4 items-end p-4 border rounded-lg bg-surface-2 border-border">
                   <div className="w-full md:w-1/4">
                     <Label className="mb-2 block">{t.tool}</Label>
@@ -168,19 +197,19 @@ export default function AuditForm() {
               <div className="p-4 rounded-lg bg-surface-2 border border-border">
                 <div className="text-sm text-muted-foreground mb-1">Total Monthly Spend</div>
                 <div className="text-3xl font-mono text-spend font-bold">
-                  ${tools.reduce((sum, t) => sum + t.spend, 0).toLocaleString()}
+                  ${formData.tools.reduce((sum, t) => sum + t.spend, 0).toLocaleString()}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Summary of Tools</Label>
                 <ul className="space-y-2">
-                  {tools.map((t, i) => (
+                  {formData.tools.map((t, i) => (
                     <li key={i} className="flex justify-between text-sm p-2 bg-surface-0 rounded">
                       <span>{t.seats}x {t.tool} ({t.plan})</span>
                       <span className="font-mono">${t.spend}</span>
                     </li>
                   ))}
-                  {tools.length === 0 && <li className="text-muted-foreground text-sm">No tools added.</li>}
+                  {formData.tools.length === 0 && <li className="text-muted-foreground text-sm">No tools added.</li>}
                 </ul>
               </div>
             </div>
@@ -192,7 +221,7 @@ export default function AuditForm() {
           {step < 3 ? (
             <Button onClick={() => setStep(step + 1)} className="bg-brand-primary hover:bg-brand-accent text-white">Next Step</Button>
           ) : (
-            <Button onClick={runAudit} className="bg-brand-primary hover:bg-brand-accent text-white" disabled={tools.length === 0}>Run Audit</Button>
+            <Button onClick={runAudit} className="bg-brand-primary hover:bg-brand-accent text-white" disabled={formData.tools.length === 0}>Run Audit</Button>
           )}
         </CardFooter>
       </Card>

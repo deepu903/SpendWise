@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@config "../../tailwind.config.ts";
-
 @theme inline {
   --color-brand-primary: #0f6e56;
   --color-brand-accent: #1D9E75;
@@ -15,44 +13,42 @@
   --color-savings: #639922;
   --color-caution: #BA7517;
 
+  /* Map shadcn CSS variables to Tailwind v4 color tokens */
+  --color-background: hsl(160 20% 5%);
+  --color-foreground: hsl(0 0% 100%);
+  --color-border: hsl(160 15% 20%);
+  --color-input: hsl(160 15% 20%);
+  --color-ring: hsl(165 75% 24%);
+  --color-card: hsl(160 20% 5%);
+  --color-card-foreground: hsl(0 0% 100%);
+  --color-primary: hsl(165 75% 24%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(160 15% 10%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(160 15% 15%);
+  --color-muted-foreground: hsl(160 10% 65%);
+  --color-accent: hsl(161 69% 36%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 74% 59%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
   --font-display: var(--font-syne);
   --font-body: var(--font-dm-sans);
   --font-mono: var(--font-jetbrains-mono);
 }
 
 @layer base {
-  :root {
-    --background: 160 20% 5%; /* approx #0a0f0d */
-    --foreground: 0 0% 100%;
-    --card: 160 20% 5%;
-    --card-foreground: 0 0% 100%;
-    --popover: 160 20% 5%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 165 75% 24%; /* #0f6e56 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 160 15% 10%; /* #111916 */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 160 15% 15%;
-    --muted-foreground: 160 10% 65%;
-    --accent: 161 69% 36%; /* #1D9E75 */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 74% 59%; /* #E24B4A */
-    --destructive-foreground: 0 0% 100%;
-    --border: 160 15% 20%;
-    --input: 160 15% 20%;
-    --ring: 165 75% 24%;
-    --radius: 0.5rem;
-  }
-}
-
-@layer base {
   * {
-    @apply border-border;
+    border-color: var(--color-border);
   }
   body {
-    @apply bg-surface-0 text-foreground font-body;
+    background-color: var(--color-surface-0);
+    color: var(--color-foreground);
+    font-family: var(--font-body, sans-serif);
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-white;
+    font-family: var(--font-display, sans-serif);
+    letter-spacing: -0.025em;
+    color: white;
   }
 }

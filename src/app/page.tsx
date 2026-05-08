@@ -15,7 +15,7 @@ export default function LandingPage() {
           Stop overpaying for AI tools.
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-          Audit your startup's AI stack in 2 minutes. Uncover hidden savings, eliminate redundant seats, and optimize your vendor spend instantly.
+          Audit your startup&apos;s AI stack in 2 minutes. Uncover hidden savings, eliminate redundant seats, and optimize your vendor spend instantly.
         </p>
         <div className="flex justify-center pt-4">
           <Link href="/audit">
@@ -70,7 +70,7 @@ export default function LandingPage() {
             { q: "What tools do you support?", a: "Currently: GitHub Copilot, Claude, ChatGPT, Gemini, Windsurf, and direct API usage." },
             { q: "Will you spam my email?", a: "No. We only require email if you want to save your audit results or receive a detailed report." }
           ].map((faq, i) => (
-            <AccordionItem key={i} value={`item-${i}`}>
+            <AccordionItem key={i}>
               <AccordionTrigger className="text-left text-lg">{faq.q}</AccordionTrigger>
               <AccordionContent className="text-muted-foreground text-base">
                 {faq.a}
