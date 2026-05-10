@@ -45,10 +45,38 @@
     background-color: var(--color-surface-0);
     color: var(--color-foreground);
     font-family: var(--font-body, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display, sans-serif);
     letter-spacing: -0.025em;
     color: white;
+  }
+
+  /* Improve selection color */
+  ::selection {
+    background-color: var(--color-brand-primary);
+    color: white;
+  }
+
+  /* Force dark scheme for native elements */
+  select, input, textarea {
+    color-scheme: dark;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface-0);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-2);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
   }
 }

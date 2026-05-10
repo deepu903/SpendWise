@@ -159,10 +159,11 @@ export default function AuditForm() {
 
           {step === 2 && (
             <div className="space-y-6">
+            <div className="space-y-4">
               {formData.tools.map((t, i) => (
-                <div key={i} className="flex flex-col md:flex-row gap-4 items-end p-4 border rounded-lg bg-surface-2 border-border">
-                  <div className="w-full md:w-1/4">
-                    <Label className="mb-2 block">{t.tool}</Label>
+                <div key={i} className="group relative flex flex-col md:flex-row gap-4 items-start md:items-end p-5 rounded-xl bg-surface-2 border border-border hover:border-brand-primary/30 transition-all shadow-sm">
+                  <div className="w-full md:w-1/3">
+                    <Label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.tool} Plan</Label>
                     <Select value={t.plan} onChange={(e) => updateTool(i, "plan", e.target.value)}>
                       {Object.keys(PRICING[t.tool as keyof typeof PRICING]).map(p => (
                         <option key={p} value={p}>{p}</option>
@@ -170,25 +171,50 @@ export default function AuditForm() {
                     </Select>
                   </div>
                   <div className="w-full md:w-1/4">
-                    <Label className="mb-2 block">Seats</Label>
-                    <Input type="number" min="1" value={t.seats} onChange={(e) => updateTool(i, "seats", parseInt(e.target.value) || 1)} />
+                    <Label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Seats</Label>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      className="h-11 bg-surface-1 border-border focus:border-brand-primary transition-all"
+                      value={t.seats} 
+                      onChange={(e) => updateTool(i, "seats", parseInt(e.target.value) || 1)} 
+                    />
                   </div>
                   <div className="w-full md:w-1/4">
-                    <Label className="mb-2 block">Mo. Spend ($)</Label>
-                    <Input type="number" min="0" value={t.spend} onChange={(e) => updateTool(i, "spend", parseFloat(e.target.value) || 0)} />
+                    <Label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Monthly Spend ($)</Label>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      className="h-11 bg-surface-1 border-border focus:border-brand-primary transition-all"
+                      value={t.spend} 
+                      onChange={(e) => updateTool(i, "spend", parseFloat(e.target.value) || 0)} 
+                    />
                   </div>
-                  <Button variant="destructive" size="icon" onClick={() => removeTool(i)} className="shrink-0 text-white hover:bg-destructive/80 shrink-0 mb-0.5">
-                    ✕
-                  </Button>
+                  <div className="flex-1 flex justify-end w-full md:w-auto">
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      onClick={() => removeTool(i)} 
+                      className="shrink-0 h-11 w-11 rounded-lg opacity-80 hover:opacity-100 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </Button>
+                  </div>
                 </div>
               ))}
               
-              <div className="flex gap-4 pt-4 border-t border-border">
-                <Select value={selectedTool} onChange={(e) => setSelectedTool(e.target.value)}>
-                  {availableTools.map(t => <option key={t} value={t}>{t}</option>)}
-                </Select>
-                <Button onClick={addTool} variant="secondary">Add Tool</Button>
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-2 border-t border-border/50">
+                <div className="flex-1">
+                  <Select value={selectedTool} onChange={(e) => setSelectedTool(e.target.value)} className="w-full">
+                    {availableTools.map(t => <option key={t} value={t}>{t}</option>)}
+                  </Select>
+                </div>
+                <Button onClick={addTool} variant="secondary" className="whitespace-nowrap">
+                  <svg className="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  Add Tool
+                </Button>
               </div>
+            </div>
             </div>
           )}
 
